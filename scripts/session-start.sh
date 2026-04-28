@@ -16,18 +16,35 @@ SESSION-START RITUAL — orchestrator MUST execute these checks
    $ git fetch origin main && git reset --hard origin/main
    (Verify clean status; ignore expected untracked artifacts)
 
-2. Read the authoritative wave-state file:
+2. Read the Session Handoff Document FIRST (pre-rendered playbook by
+   PM at prior session-close; saves 65-95k vs legacy ritual):
 EOF
 
-if [[ -f "$WAVE_STATE" ]]; then
-  echo "   $ cat $WAVE_STATE"
+NEXT_SESSION="${NEXT_SESSION:-plans/next-session.md}"
+
+if [[ -f "$NEXT_SESSION" ]]; then
+  echo "   $ cat $NEXT_SESSION"
   echo ""
-  echo "------- $WAVE_STATE -------"
-  cat "$WAVE_STATE"
+  echo "------- $NEXT_SESSION -------"
+  cat "$NEXT_SESSION"
   echo "------- end -------"
 else
-  echo "   ERROR: $WAVE_STATE not found."
-  echo "   Create from templates/wave-state.md if this is a fresh project."
+  echo "   $NEXT_SESSION not found. Falling back to authoritative state file:"
+  echo ""
+  if [[ -f "$WAVE_STATE" ]]; then
+    echo "   $ cat $WAVE_STATE"
+    echo ""
+    echo "------- $WAVE_STATE -------"
+    cat "$WAVE_STATE"
+    echo "------- end -------"
+    echo ""
+    echo "   NOTE: Legacy session-start ritual applies (PM dispatch at session-start)."
+    echo "   PM should generate $NEXT_SESSION at this session's close to enable SHD"
+    echo "   protocol from next session onwards."
+  else
+    echo "   ERROR: Neither $NEXT_SESSION nor $WAVE_STATE found."
+    echo "   Create from templates/ if this is a fresh project."
+  fi
   echo ""
 fi
 

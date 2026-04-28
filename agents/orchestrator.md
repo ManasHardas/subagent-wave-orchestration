@@ -152,7 +152,7 @@ Before tagging `p<N>-shipped`:
 Before any planning or dispatch in any session, the orchestrator MUST execute these checks. Skipping this checklist is what produces dispatch-brief-accuracy collapses (typically 4+ Blockers + 50-100k fix-cycle tax per affected PR).
 
 1. **Fetch + reset worktree to origin/main.** Verify clean status.
-2. **Read `plans/wave-state.md`** — authoritative state file updated by PM at session-close. Identifies current phase + wave + carry-over slots + open blockers + next-required-activities.
+2. **Read `plans/next-session.md` FIRST** (Session Handoff Document — pre-rendered playbook by PM at prior session-close per SHD protocol; see `agents/pm.md` §Session Handoff Document protocol). Contains: pre-rendered slot 1 dispatch brief, compressed priors digest, watchdog framing, stop conditions. If `next-session.md` is missing OR the "Generated:" stamp is older than the latest merged PR, fall back to **`plans/wave-state.md`** (authoritative state) + run the legacy session-start ritual (PM dispatch at session-start). The SHD protocol typically saves 65-95k of session-start overhead by eliminating PM-dispatch-at-session-start.
 3. **Cross-reference required activities for current phase+wave** from §Wave sequence above. Specifically check:
    - Wave 0: orchestrator-only contract freeze + PM-Designer phase-sanity-check + tracking issue creation
    - Wave 0.5: 3 parallel build-agent dispatches for issue decomposition (Backend + Frontend + Infra)

@@ -16,7 +16,7 @@ A copy-into-your-project template containing:
   - Clause #6: reviewer-trio composition (default-keep / default-prune rules)
   - HARD CONSTRAINT: verification environment (no `docker cp` / `docker exec` mutation)
   - Close-keyword convention (one `Closes #N` per line for bundled PRs)
-- **`templates/`** — empty starter files for `wave-state.md`, `capacity-log.md`, `velocity.json`, `phase-spec.md`, `implementation-plan.md`
+- **`templates/`** — empty starter files for `wave-state.md`, `capacity-log.md`, `velocity.json`, `phase-spec.md`, `implementation-plan.md`, `next-session.md` (Session Handoff Document)
 - **`scripts/`** — read-only checklist printers for session-start + session-close
 - **`CLAUDE.md.snippet`** — paste this into your project's `CLAUDE.md` to encode operating-mode rules
 
@@ -55,6 +55,26 @@ Wave 0 + Wave 0.5 produce the **filed-issue ready-set** that drives Wave 1 build
 | **Infra** | Compose, Dockerfiles, CI, scripts | n/a | `agents/infra.md` |
 | **QA** | Test files | n/a | `agents/qa.md` |
 | **Docs** | README, CHANGELOG, runbooks | n/a | `agents/docs.md` |
+
+## Session Handoff Document (SHD) protocol — saves 65-95k per session-start
+
+PM at every session-close regenerates `plans/next-session.md` — a single self-contained playbook for the next session. It contains:
+
+- Quick-context (phase, wave, mode, last SHA, carry-over slots, open blockers)
+- Active priors digest (compressed `velocity.json` table)
+- **Pre-rendered slot 1 dispatch brief** (verbatim — orchestrator paste-dispatches without synthesis)
+- Slot 2-N compressed briefs (issue numbers + class + anchor + reviewer composition)
+- Watchdogs (T-A / T-G / T-D thresholds)
+- Stop conditions
+- User-override section (paste deltas after the resume message)
+
+At the next session-start, orchestrator reads ONLY `next-session.md` and executes. **No PM dispatch needed at session-start.** Legacy session-start ritual saved 100-140k of overhead; SHD protocol cuts that to 5-15k. **Net savings: 65-95k per session.**
+
+If `next-session.md` is missing (fresh project) or stale (older than the latest merged PR), orchestrator falls back to `wave-state.md` + legacy ritual.
+
+`plans/wave-state.md` remains authoritative. `next-session.md` is a CACHE optimized for fast bootstrap — if they conflict, `wave-state.md` wins.
+
+See `agents/pm.md` §Session Handoff Document protocol for the full structure + maintenance rules.
 
 ## Operating modes — ACTIVE vs DEGRADED
 

@@ -108,7 +108,65 @@ PM never silently assumes a budget. If unknown, it asks through Orchestrator (wh
 
 1. Append session entry to `capacity-log.md`.
 2. Update `wave-state.md` `## Current state` block to reflect post-session reality (move closed session into rolling history; update carry-over slots; update next-required-activities).
-3. Produce dispatch forecast for next session based on filed-issue ready-set.
+3. **Regenerate `plans/next-session.md` for S<N+1>** (Session Handoff Document — see SHD protocol below).
+4. Produce dispatch forecast for next session based on filed-issue ready-set.
+
+### Session Handoff Document (SHD) protocol — `plans/next-session.md`
+
+PM is responsible for regenerating `plans/next-session.md` at every session-close. This is the SINGLE file orchestrator reads at S<N+1> session-start. Eliminates re-derivation of what was already known at S<N> close. Saves 65-95k per session-start.
+
+**Required structure:**
+
+```markdown
+# Session N+1 Handoff
+**Generated:** YYYY-MM-DD by PM at S<N> close.
+**Stale-after:** any user direction change OR any unmerged PR appearing post-generation.
+
+## User: paste this as your first session-start message
+> Read plans/next-session.md and execute it. Budget: <full | half | tight | Xk>.
+
+## Session N+1 quick-context
+- Phase: P<N> — <name>
+- Wave: <wave>
+- Operating mode: ACTIVE (per CLAUDE.md rules; <reason>)
+- Last SHA: <sha>
+- Carry-over slots: <list or "none">
+- Open blockers: <list or "none">
+
+## Active priors (compressed digest of velocity.json)
+| Class | Anchor (slot total) | n | Notes |
+|---|---|---|---|
+
+## Pre-rendered slot 1 dispatch brief
+[VERBATIM dispatch brief — ~3-5k. Orchestrator can paste-dispatch this with zero synthesis.]
+
+## Pre-rendered slot 2-N dispatch briefs (compressed)
+- Slot 2: dispatch <agent-role> for issue #<N>; class <X>; anchor <Yk>; reviewer composition <Z>.
+- Slot 3: ...
+
+## Watchdogs for this session
+- T<N>-A: <threshold>
+- T<N>-G: <threshold>
+- T<N>-D: <threshold>
+
+## Stop conditions
+After slot <X> clean-merge + chore commit. Tag <tag-name> if applicable.
+
+## Session-close artifacts to update
+1. plans/velocity.json (append entries)
+2. plans/capacity-log.md (append S<N+1> entry)
+3. plans/wave-state.md (update Current state block)
+4. plans/next-session.md (regenerate THIS file for S<N+2>)
+
+## User-override section
+If your priorities at session-start differ from the pre-rendered plan, paste your override AFTER your "Read plans/next-session.md and execute it" message. Orchestrator applies overrides as delta on top of this playbook.
+```
+
+**Cap at ~10k tokens.** Slot 1 brief verbatim (~3-5k); slot 2+ compressed pointers. Full briefs reachable via `agents/<role>.md` + `dispatch-templates/*.md` references when expanded by orchestrator at dispatch time.
+
+**Cost shift:** PM session-close grows by ~30-40k (writing the file). Orchestrator session-start drops by ~95-135k (no PM dispatch + single file read). Net win: **65-95k per session.**
+
+**Authoritative file remains `plans/wave-state.md`** — `next-session.md` is a CACHE optimized for fast bootstrap, not a replacement. If they conflict, wave-state.md wins.
 
 ### Wave close
 
