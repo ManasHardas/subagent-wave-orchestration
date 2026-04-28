@@ -1,0 +1,22 @@
+# Snippet to paste into your project's CLAUDE.md
+# Encodes the ACTIVE vs DEGRADED operating-mode rules so they auto-load
+# into every conversation context.
+
+## Session operating modes
+
+**Read `plans/wave-state.md` BEFORE any planning or dispatch.** It is the authoritative state file for the project. Then cross-reference `.orchestrator/agents/orchestrator.md` §Session-start ritual.
+
+**Two operating modes — ACTIVE (full PM discipline) vs DEGRADED (PM-skip):**
+
+DEGRADED mode is allowed ONLY when ALL of:
+- All planned slots are narrow-fix or sibling-shape (no first-of-class)
+- All issues filed before session start (no orchestrator scope synthesis)
+- No new contract artifacts (no new endpoints, tables, OpenAPI changes, migrations)
+- Last session closed cleanly (no unresolved fix-cycle)
+
+ACTIVE mode is REQUIRED if ANY of the above conditions fails. ACTIVE mode requires:
+- Stage-2 PM dispatched at session-start + session-close (per `.orchestrator/agents/pm.md`)
+- Wave 0.5 issue planning before any Wave 1 build dispatch (per `.orchestrator/agents/orchestrator.md` §Wave sequence)
+- Dispatch briefs derived from FILED ISSUE BODIES, not orchestrator-synthesized memory
+
+**Source:** retrospective from a real project where PM-skip mode was wrongly applied to a session introducing new pages with new state machines. The orchestrator-synthesized dispatch brief conflated already-shipped endpoints as "future-phase, disable with tooltip"; review agent fired 4 Blockers; ~68k fix-cycle tax incurred. **This rule is now permanent.**
