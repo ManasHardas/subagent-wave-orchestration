@@ -175,3 +175,23 @@ Before any planning or dispatch in any session, the orchestrator MUST execute th
 6. **Confirm with user before proceeding** if the mode is contested OR if Wave activity sequencing needs alignment.
 
 **Source:** retrospective from a real project where PM-skip mode was wrongly applied to a session that introduced new pages with new state machines; orchestrator-synthesized dispatch brief conflated already-shipped endpoints with future ones; review agent fired 4 Blockers; ~68k fix-cycle tax incurred. This clause encodes the operating-mode rule so the discipline survives future context windows / session amnesia.
+
+---
+
+## Session-close ritual (PERMANENT clause)
+
+Symmetric to the session-start ritual. Before merging the chore-close PR for any session, the orchestrator (or PM, if dispatched at close) MUST execute:
+
+1. **Run `scripts/check-session-close-guardrails.sh`** (with `--no-gh` if the network is unavailable; with `--verbose` if any check warrants drilling in). The script enforces 17 invariants:
+   - **BLOCKER (exit 1):** velocity.json rollup completeness (one `pr_merge` row per build PR), wave-state.md currency for current session, SHD presence for S<N+1>, capacity-log.md entry, clean working tree, clean worktrees (`.worktrees/` empty + `git worktree list` count = 1), cc_session_id presence (gated by `GUARDRAIL_CC_SESSION_GATE` env var if your harness exposes a session id).
+   - **WARN (exit 2):** stale local branches, stale remote branches, operating-mode declared in close-commit, watchdog (T-A/T-G/T-D) status declared, every `Closes #N` issue actually closed, phase-tracking-issue mentioned.
+   - **INFO (always):** calibration-findings count, velocity.json entry count for the session.
+2. **If exit 1:** STOP. Fix each `[FAIL]` line, re-run the script, repeat until exit 0 or 2. Do NOT draft the chore-close commit while BLOCKERs are unresolved.
+3. **If exit 2:** the chore-close commit body MUST list each `[WARN]` as an explicit one-line acknowledgment. The acknowledgment converts unsurfaced drift into a documented deferral — that's the discipline.
+4. **If exit 0:** proceed with the chore-close commit + PR.
+
+**Cost:** ~5s wall-clock + ~200-300 tokens (without `--verbose`); ~5-10k additional tokens if `--with-gh` is used for issue-close + branch-cleanup verification. Net ROI: each invariant violation caught at close-time costs ~2-30k to fix, vs ~30-100k+ if discovered N sessions later (silent execution drift from non-negotiable spec invariants is invisible during normal development — agents follow stale memory; the spec keeps living in the doc).
+
+**Bypass policy:** none. If a check is wrong (false positive on a legitimate edge case), file an issue against the script — do not skip the gate. Bypassing the guardrails script is treated identically to bypassing the operating-mode rule.
+
+**Companion:** `scripts/session-close.sh` is the read-only checklist printer (WHAT to do); `scripts/check-session-close-guardrails.sh` is the enforcement gate (verify it was done).

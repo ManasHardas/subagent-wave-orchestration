@@ -20,3 +20,9 @@ ACTIVE mode is REQUIRED if ANY of the above conditions fails. ACTIVE mode requir
 - Dispatch briefs derived from FILED ISSUE BODIES, not orchestrator-synthesized memory
 
 **Source:** retrospective from a real project where PM-skip mode was wrongly applied to a session introducing new pages with new state machines. The orchestrator-synthesized dispatch brief conflated already-shipped endpoints as "future-phase, disable with tooltip"; review agent fired 4 Blockers; ~68k fix-cycle tax incurred. **This rule is now permanent.**
+
+## Session-close guardrails
+
+**`scripts/check-session-close-guardrails.sh` MUST run before the chore-close commit.** Exit 1 = BLOCKER, stop and fix; exit 2 = WARN, acknowledge each warn-line in the chore-close commit body; exit 0 = clean, proceed. Enforces 17 invariants: velocity.json rollup completeness (one `pr_merge` row per build PR), wave-state.md currency, SHD presence for S<N+1>, capacity-log.md entry, clean working tree, clean worktrees, cc_session_id presence (when your harness exposes one), stale-branch cleanup, operating-mode + watchdog declarations in close commit, etc. Cost ~5s + ~200-300 tokens per session; +5-10k with GitHub API checks for issue/branch verification.
+
+Catches the silent execution drift from non-negotiable spec invariants that is invisible during normal development — agents follow stale memory; the spec keeps living in the doc unaltered until someone runs a retrospective and notices the gap. **No bypass** — file an issue against the script if a check is wrong; do not skip the gate. See `.orchestrator/agents/orchestrator.md` §Session-close ritual + `.orchestrator/agents/pm.md` §Session close step 5.

@@ -78,7 +78,19 @@ PM agent runs at session-close to update three persistent files:
 
    Cap at ~10k tokens. Saves 65-95k per session-start vs legacy ritual.
 
-5. Commit all 4 files in ONE chore PR:
+5. Run scripts/check-session-close-guardrails.sh BEFORE drafting the chore commit.
+   Enforces 17 non-negotiable invariants. Exit codes:
+     0 — clean: proceed with the chore-close commit.
+     1 — BLOCKER: STOP. Fix each [FAIL] line, re-run, then proceed.
+     2 — WARN: chore-close commit body MUST acknowledge each [WARN] line
+         (one bullet per warning).
+
+   $ scripts/check-session-close-guardrails.sh           # auto-detects session
+   $ scripts/check-session-close-guardrails.sh --no-gh   # skip GitHub API checks
+
+   See agents/orchestrator.md §Session-close ritual for full rationale.
+
+6. Commit all 4 files in ONE chore PR:
    $ git checkout -B chore/s<N>-close origin/main
    $ git add plans/velocity.json plans/capacity-log.md plans/wave-state.md plans/next-session.md
    $ git commit -m "chore: S<N> <phase/wave> close"

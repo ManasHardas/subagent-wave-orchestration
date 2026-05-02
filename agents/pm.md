@@ -110,6 +110,15 @@ PM never silently assumes a budget. If unknown, it asks through Orchestrator (wh
 2. Update `wave-state.md` `## Current state` block to reflect post-session reality (move closed session into rolling history; update carry-over slots; update next-required-activities).
 3. **Regenerate `plans/next-session.md` for S<N+1>** (Session Handoff Document — see SHD protocol below).
 4. Produce dispatch forecast for next session based on filed-issue ready-set.
+5. **Run `scripts/check-session-close-guardrails.sh` BEFORE drafting the chore-close commit.** This script enforces 17 non-negotiable invariants (velocity.json rollup, wave-state currency, SHD presence, clean tree, clean worktrees, watchdog declarations, etc). Exit codes:
+   - `0` — clean: proceed with chore-close commit.
+   - `1` — BLOCKER: at least one invariant violated. STOP. Fix each `[FAIL]` line and re-run before drafting the close commit. Common fixes:
+     - velocity.json rollup miss → append the missing `pr_merge` row(s) per §Per-merge step 3.
+     - dirty working tree → commit or stash the pending changes.
+     - stray worktree → `git worktree remove .worktrees/<name>; git branch -D <branch>; gh api -X DELETE repos/{owner}/{repo}/git/refs/heads/<branch>`.
+     - missing SHD → regenerate `plans/next-session.md` per the SHD protocol below.
+   - `2` — WARN-only: close may proceed BUT the chore-close commit body MUST acknowledge each `[WARN]` line (one bullet per warning). The acknowledgment converts an unsurfaced drift into an explicit deferral — that's the discipline.
+6. The guardrails script is itself a permanent invariant. If a check is wrong (false positive on a legitimate edge case), file an issue against the script — do not bypass it. Silent execution drift from non-negotiable spec invariants (the failure mode this script prevents) is invisible during normal development — agents follow stale memory; the spec keeps living in the doc unaltered.
 
 ### Session Handoff Document (SHD) protocol — `plans/next-session.md`
 
