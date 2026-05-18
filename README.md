@@ -1,4 +1,4 @@
-# subagent-wave-orchestration
+# agentwaves
 
 A discipline framework for building software with Claude Code (or similar AI orchestration tools) using **dispatched specialist agents** organized in **wave-cadence** phases.
 
@@ -103,9 +103,9 @@ This rule is encoded in:
 
 ```bash
 cd <your-project>
-git submodule add https://github.com/<your-username>/subagent-wave-orchestration .orchestrator
+git submodule add https://github.com/<your-username>/agentwaves .orchestrator
 # OR plain copy:
-git clone https://github.com/<your-username>/subagent-wave-orchestration .orchestrator
+git clone https://github.com/<your-username>/agentwaves .orchestrator
 ```
 
 ### 2. Customize agent files for your stack
