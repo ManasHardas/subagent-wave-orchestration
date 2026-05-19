@@ -65,6 +65,29 @@ gh pr create --draft \
 gh pr ready
 ```
 
-## Wave 0.5 for QA (mini-planning at end of Wave 1)
+## Wave 2 §0 — QA planning pass (dispatched once, before any test-writing)
 
-After Wave 1 build PRs have all merged, you do a small Wave 0.5-style planning pass: read the phase spec's acceptance criteria, propose a test-plan comment on the phase tracking issue, then `gh issue create` each test-writing issue. Target ~4–8 test issues per phase (unit-dense, integration-medium, 1–2 E2E).
+After Wave 1 build PRs have all merged, Orchestrator dispatches you for a single planning-only pass. This is the QA-side analogue of Wave 0.5 for build agents. No code lands in this dispatch.
+
+**Inputs**
+- Phase spec (`plans/feature-p<N>-<slug>.md`) — §Acceptance criteria is the source of truth.
+- Phase tracking issue checklist.
+- Merged Wave 1 build PRs (read via `gh pr list --state merged --label phase/p<N>`) — what's been tested already vs. what's gap-coverage.
+
+**Procedure**
+1. **Coverage gap analysis.** For each acceptance criterion on the phase spec, identify whether existing Wave 1 unit/integration tests already cover it. Flag the uncovered + thinly-covered items.
+2. **Decompose into test-writing issues.** Target ~4–8 issues per phase. Each issue 1–2 days. Distribute across the test pyramid:
+   - Unit-dense — bulk of the issues; each one covers a service or worker module's gap coverage.
+   - Integration-medium — 1–2 issues covering API contract + worker end-to-end on fixture data.
+   - E2E thin — 1–2 issues covering the golden path + one critical error path.
+3. **File each issue** via `gh issue create` with labels `phase/p<N>,agent/qa,type/test`. Use the standard title shape `[P<N>][QA] <one-line scope>`.
+4. **Post test-plan comment on the phase tracking issue.** Markdown structure:
+   ```
+   ## Wave 2 test plan
+   - Coverage gap summary: <one paragraph>
+   - Issues filed: #<N>, #<M>, ... (suggested execution order)
+   - Risk areas not covered by this plan: <list or "none">
+   ```
+5. **Return to Orchestrator.** Wave 2 §1 (the QA build loop) begins next; Orchestrator dispatches you issue-by-issue from the planned set.
+
+**Why dispatch QA twice (plan, then build).** The same discipline Wave 0.5 enforces on build agents — decompose before executing — applies to QA. Without it, the QA agent invents test-issue scope mid-execution, which leaks token budget and risks drift from acceptance criteria.

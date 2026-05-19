@@ -119,6 +119,11 @@ PM never silently assumes a budget. If unknown, it asks through Orchestrator (wh
      - missing SHD → regenerate `plans/next-session.md` per the SHD protocol below.
    - `2` — WARN-only: close may proceed BUT the chore-close commit body MUST acknowledge each `[WARN]` line (one bullet per warning). The acknowledgment converts an unsurfaced drift into an explicit deferral — that's the discipline.
 6. The guardrails script is itself a permanent invariant. If a check is wrong (false positive on a legitimate edge case), file an issue against the script — do not bypass it. Silent execution drift from non-negotiable spec invariants (the failure mode this script prevents) is invisible during normal development — agents follow stale memory; the spec keeps living in the doc unaltered.
+7. **Enumerate believed-still-open issues in the chore-close commit body.** The body MUST contain a line of the form:
+   ```
+   Issues believed-still-open at session close: #<N>, #<M>, ...   (or "none")
+   ```
+   This is the ground-truth source the next session's SHD writer (and orchestrator §Session-start step 5) cross-references via `gh issue view <N>`. Without it, SHDs propagate stale "OPEN/deferred" framing when a prior chore-close auto-closed issues via `closingIssuesReferences`. One enumerate line at close prevents a phantom-bug dispatch in the next session.
 
 ### Session Handoff Document (SHD) protocol — `plans/next-session.md`
 
@@ -230,10 +235,20 @@ PM treats these as priors; Bayesian-update with each real observation. After ~10
 
 ---
 
-## Standard watchdogs (T-A / T-G / T-D)
+## Standard watchdogs
 
-PM proposes per-session watchdog thresholds at session-start:
+PM proposes per-session watchdog thresholds at session-start. Two families:
 
-- **T-A (cumulative budget):** "cum > 700k post-slot-N reviewers → defer remaining tails." Standard for full-window sessions; calibrate threshold to reported budget.
+### Budget watchdogs (T-A / T-G / T-D)
+
+- **T-A (cumulative budget):** "cum > <ceiling> post-slot-N reviewers → defer remaining tails." Calibrate the ceiling to the user-reported budget. T-A is **advisory under explicit user override** — if the user explicitly authorizes "continue" past the ceiling at a checkpoint, T-A no longer auto-defers for that session; PM logs the override and keeps tracking.
 - **T-G (slot anchor drift):** "any slot > 1.3× anchor → user-escalate (ADVISORY; do not auto-swap)." 1.3× is calibrated to allow normal first-of-class variance without false positives.
 - **T-D (fix-cycle stop):** "second fix-cycle iteration on any slot → stop after that slot's eventual clean merge." Prevents cascading fix-cycles from blowing the budget.
+
+### Coordination watchdogs (T-M / T-X / T-Y)
+
+These prevent silent drift between the plan, the parallel-lane dispatch, and the post-merge issue state. All three are declared PERMANENT once enabled — orchestrator references them at session-start, PM verifies in session-close.
+
+- **T-M (plan-template module-reference drift):** before Wave 0.5 or Wave 1 dispatch on a plan that names specific module/import paths, `grep -r "<old-convention>"` the codebase to confirm the plan's references still match current conventions. Stale plan-template imports propagate verbatim to build agents and surface as fix-cycle work. Catch cost is a single grep; miss cost is re-doing the affected lane.
+- **T-X (textual-merge-conflict pre-dispatch gate):** before dispatching parallel Wave 1 lanes, identify any file that more than one lane will touch (`models.py`, shared services, central routers, root-level config). For genuine overlaps: either serialize via `Depends on:`, or pre-extract shared helpers to a new module in an orchestrator-led contract-amendment so each lane only touches narrow non-overlapping surfaces (e.g. router registration line). Catch at dispatch-time is cheap; cascading rebase fix-cycles at merge-time are not.
+- **T-Y (post-merge issue-closure verification):** after every admin/auto-merge, verify each `Closes #N` reference in the merged PR actually closed its issue. Two failure modes to catch: (a) the `Closes #N` line was malformed (see `dispatch-templates/close-keyword-convention.md`) and GitHub didn't fire auto-close, (b) a PR title or body fragment like `(#N)` triggered a *spurious* auto-close on an unrelated issue. Manually close stragglers or re-open spurious closures. Surfaces propagate "OPEN/deferred" misinformation into the next session's SHD if uncaught.

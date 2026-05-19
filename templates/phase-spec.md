@@ -99,6 +99,28 @@ Infra agent: <minimal | N issues>.
 
 ---
 
+## Wave 1 sub-decimal ordering (use when phase has >~15 issues)
+
+For phases that decompose into many issues, group Wave 1 work into sub-waves with decimal ordering. Each sub-wave is a serializable batch with its own contract-amendment and conflict-resolution checkpoints. The benefit: Orchestrator and PM can plan per-sub-wave, file `Depends on:` cleanly across sub-wave boundaries, and surface T-X overlap concerns at the sub-wave level rather than the whole-phase level.
+
+Suggested decomposition (adapt per phase):
+
+| Sub-wave | Scope | Notes |
+|---|---|---|
+| **1.0** | Critical-path data model + entry endpoints | Establishes the surface every later sub-wave builds on. |
+| **1.1** | Worker stages 1–N | Sequential by data-flow dependency. |
+| **1.2** | API surface (read + write endpoints) | Frontend lanes block on this. |
+| **1.5** | Mid-phase contract amendment (if needed) | Lift shared helpers, regenerate codegen, re-dispatch downstream. |
+| **1.6** | Frontend feature pages | After API is live + frontend lanes unblock. |
+| **4.1** | Polish, edge-case handling | Optional; for large phases. |
+| **4.3** | Performance / observability tuning | Optional; deferrable to follow-up phase. |
+
+Sub-decimals are advisory ordering hints, not rigid gates — Orchestrator may reshuffle as new dependencies surface during Wave 0.5. Document the actual ordering used in `plans/wave-state.md` at each session-close.
+
+For small phases (≤~15 issues) skip this section — flat Wave 1 ordering is sufficient.
+
+---
+
 ## Acceptance criteria (phase tracking issue)
 
 - [ ] <criterion 1>
